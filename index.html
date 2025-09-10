@@ -3,14 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeu de Plateforme</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; background-color: #87CEEB; }
-    </style>
+    <title>Crazy Jumper</title>
+    <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <script type="module" src="game.js"></script>
+    <div class="game-container">
+        <div id="gameArea">
+            <div id="platforms"></div>
+            <div class="player"></div>
+        </div>
+        <div class="scoreboard">
+            <div class="score">Score: 0</div>
+            <div class="lives">Vies: 3</div>
+        </div>
+        <div class="game-over" style="display: none;">
+            <span>Game Over!</span>
+        </div>
+        <div class="start-message">
+            Appuyez sur une touche pour commencer !
+        </div>
+    </div>
+
+    <script src="/src/app.js"></script>
 </body>
 </html>
