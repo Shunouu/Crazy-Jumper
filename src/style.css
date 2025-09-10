@@ -1,4 +1,4 @@
-/* Reset et style de base */
+/* ------------------ RESET ET STYLES DE BASE ------------------ */
 * {
     margin: 0;
     padding: 0;
@@ -7,70 +7,268 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to top, #87CEEB, #E0FFFF);  /* Dégradé du ciel */
     overflow: hidden;
-    background: linear-gradient(to top, #87CEEB, #E0FFFF);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
-/* Container du jeu */
+/* ------------------ FOND AVEC ANIMATION DE PARRALAX ------------------ */
+@keyframes skyMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
+
+body {
+    background: linear-gradient(45deg, #87CEEB, #ADD8E6);
+    background-size: 200% 200%;
+    animation: skyMove 60s ease-in-out infinite;
+}
+
+/* ------------------ ETOILES SCINTILLANTES ------------------ */
+@keyframes twinkle {
+    0% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.3); }
+    100% { opacity: 0.5; transform: scale(1); }
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 2s infinite alternate;
+    opacity: 0.8;
+}
+
+.star:nth-child(even) {
+    animation-duration: 3s;
+}
+
+.star:nth-child(odd) {
+    animation-duration: 2s;
+}
+
+/* ------------------ NUAGES ANIMÉS ------------------ */
+@keyframes floatClouds {
+    0% { left: -300px; }
+    100% { left: 100vw; }
+}
+
+.cloud {
+    position: absolute;
+    width: 300px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 100px;
+    animation: floatClouds 45s linear infinite;
+    opacity: 0.7;
+    box-shadow: 0px 8px 16px rgba(255, 255, 255, 0.5);
+    z-index: -1;
+}
+
+.cloud:nth-child(odd) {
+    animation-duration: 50s;
+    top: 100px;
+    opacity: 0.5;
+}
+
+.cloud:nth-child(even) {
+    animation-duration: 60s;
+    top: 200px;
+    opacity: 0.6;
+}
+
+/* ------------------ MENU PRINCIPAL ------------------ */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.8);  /* Fond sombre */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 9999;
+    animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.menu-card {
+    width: 90%;
+    max-width: 600px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    animation: slideInUp 1s ease-out;
+}
+
+@keyframes slideInUp {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+}
+
+.menu-card h2 {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.rules {
+    margin-bottom: 20px;
+}
+
+.rules p {
+    font-size: 18px;
+}
+
+.rules ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+
+.rules li {
+    font-size: 16px;
+    padding: 5px 0;
+}
+
+/* Options de couleur */
+.color-picker {
+    margin: 20px 0;
+}
+
+.characters {
+    display: grid;
+    grid-template-columns: repeat(5, 60px);
+    gap: 15px;
+    justify-content: center;
+}
+
+.character-option {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    border: 4px solid #fff;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.character-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.character-option.active {
+    border-color: gold;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+/* Bouton jouer */
+.btn-primary {
+    padding: 15px 25px;
+    background: #32CD32;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s ease, background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #28a745;
+    transform: translateY(-4px);
+}
+
+.btn-primary:active {
+    transform: translateY(2px);
+}
+
+/* ------------------ COMPTE À REBOURS ------------------ */
+.countdown {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 1000;
+    font-size: 120px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* ------------------ ZONE DE JEU ------------------ */
+
 .game-container {
     position: relative;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-}
-
-/* Zone de jeu */
-#gameArea {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+    background: linear-gradient(180deg, #ffffff, #87CEEB); /* Ciel et sol */
 }
 
 /* Joueur stylé */
 .player {
     position: absolute;
-    width: 50px;
-    height: 50px;
-    background: radial-gradient(circle at 30% 30%, #ff4d4d, #b30000);
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #ff4d4d, #b30000);  /* Couleur dynamique par défaut */
     border-radius: 50%;
     border: 3px solid #fff;
     box-shadow: 0 0 15px rgba(255, 77, 77, 0.7);
     transition: transform 0.1s ease-in-out;
+    z-index: 10;
 }
 
 /* Plateformes stylées */
 .platform {
     position: absolute;
-    width: 120px;
+    width: 150px;
     height: 20px;
     background: linear-gradient(135deg, #32CD32, #228B22);
     border-radius: 10px;
     border: 2px solid #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease;
+    transition: transform 0.3s ease;
 }
 
 .platform:hover {
     transform: scale(1.1);
 }
 
-/* Scoreboard moderne */
+/* Scoreboard */
 .scoreboard {
     position: fixed;
-    top: 15px;
+    top: 20px;
     left: 20px;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     padding: 10px 20px;
-    border-radius: 15px;
+    border-radius: 10px;
     color: #fff;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
     z-index: 1000;
 }
 
-/* Game over stylé */
+/* Game Over */
 .game-over {
     position: fixed;
     top: 50%;
@@ -79,7 +277,7 @@ body {
     color: #FF0000;
     font-size: 40px;
     font-weight: bold;
-    text-shadow: 2px 2px #000;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
     display: none;
     z-index: 1000;
 }
@@ -95,37 +293,4 @@ body {
     font-weight: bold;
     text-shadow: 1px 1px #fff;
     z-index: 1000;
-}
-
-/* Nuages animés */
-.cloud {
-    position: absolute;
-    width: 200px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 100px;
-    box-shadow: 50px 30px 50px rgba(255, 255, 255, 0.6);
-    animation: floatClouds linear infinite;
-    top: 50px;
-}
-
-@keyframes floatClouds {
-    0% { left: -250px; }
-    100% { left: 100vw; }
-}
-
-/* Ajout de particules étoiles pour l'ambiance */
-.star {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: white;
-    border-radius: 50%;
-    opacity: 0.8;
-    animation: twinkle 2s infinite alternate;
-}
-
-@keyframes twinkle {
-    0% { opacity: 0.3; transform: scale(1); }
-    100% { opacity: 1; transform: scale(1.5); }
 }

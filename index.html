@@ -3,27 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Crazy Jumper</title>
-    <link rel="stylesheet" href="/src/style.css">
+
+    <!-- Lien vers ton fichier CSS -->
+    <link rel="stylesheet" href="src/style.css">
+
+    <!-- Ajout de la police (si nécessaire) -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="game-container">
-        <div id="gameArea">
-            <div id="platforms"></div>
-            <div class="player"></div>
-        </div>
-        <div class="scoreboard">
-            <div class="score">Score: 0</div>
-            <div class="lives">Vies: 3</div>
-        </div>
-        <div class="game-over" style="display: none;">
-            <span>Game Over!</span>
-        </div>
-        <div class="start-message">
-            Appuyez sur une touche pour commencer !
+
+    <!-- Menu principal -->
+    <div id="menu" class="menu-overlay" tabindex="0">
+        <div class="menu-card">
+            <h2>Bienvenue dans Crazy Jumper !</h2>
+
+            <div class="rules">
+                <p><strong>Règles du jeu :</strong></p>
+                <ul>
+                    <li>Utilise les flèches ⬅️ ➡️ pour te déplacer</li>
+                    <li>Appuie sur Espace pour sauter</li>
+                    <li>Ne tombe pas ! Gagne des points en rebondissant sur les plateformes.</li>
+                </ul>
+            </div>
+
+            <div class="color-picker">
+                <p><strong>Choisis ta couleur :</strong></p>
+                <div id="characters" class="characters"></div>
+            </div>
+
+            <button id="playBtn" class="btn-primary">Jouer</button>
         </div>
     </div>
 
-    <script src="/src/app.js"></script>
+    <!-- Compte à rebours -->
+    <div id="countdown" class="countdown" style="display:none;"></div>
+
+    <!-- Aire de jeu -->
+    <div id="gameArea" class="game-container">
+        <div id="platforms"></div>
+        <div class="scoreboard">
+            <span class="score">Score: 0</span>
+            <span class="lives">Vies: 3</span>
+        </div>
+        <div class="game-over" style="display:none;">
+            <span>Game Over! Score: 0</span>
+        </div>
+        <div class="start-message" style="display:none;">
+            <span>Appuyez sur une touche pour commencer</span>
+        </div>
+    </div>
+
+    <!-- Lien vers ton fichier JavaScript -->
+    <script src="src/app.js"></script>
+
 </body>
 </html>
