@@ -44,9 +44,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let playerX = 100
   let playerY = 200
   let vy = 0
-  const gravity = 0.6
-  const jumpVelocity = 12
-  const moveStep = 40
+  const gravity = 0.1
+  const jumpVelocity = 20
+  const moveStep = 90
 
   let platforms = []
   const platformW = 150
@@ -123,8 +123,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const resetPlayerVars = () => {
-    playerX = 100
-    playerY = Math.max(150, Math.floor(gameArea.offsetHeight * 0.2))
+    playerX = (gameArea.offsetWidth / 2) - (playerW / 2) // place la balle au centre
+    playerY = (gameArea.offsetHeight / 2) - (playerH / 2) // centre aussi en hauteur)
     vy = 0
   }
 
