@@ -1,265 +1,319 @@
-// ====== Variables du jeu ======
-let player;
-let platforms = [];
-let score = 0;
-let lives = 3;
-let gameStarted = false;
-let selectedColor = localStorage.getItem("cj_color") || "lime";  // Récupérer la couleur sélectionnée
+document.addEventListener('DOMContentLoaded', async () => {
+  // Sélecteurs DOM avec destructuration
+  const menuOverlay = document.getElementById('menu')
+  const playBtn = document.getElementById('playBtn')
+  const countdownDiv = document.getElementById('countdown')
+  const gameArea = document.getElementById('gameArea')
+  const platformsContainer = document.getElementById('platforms')
+  const scoreElement = document.querySelector('.score')
+  const livesElement = document.querySelector('.lives')
+  const pauseBtn = document.getElementById('pauseBtn')
+  const pauseMenu = document.getElementById('pauseMenu')
+  const resumeBtn = document.getElementById('resumeBtn')
+  const retryBtnPause = document.getElementById('retryBtnPause')
+  const retryBtn = document.getElementById('retryBtn')
+  const menuBtns = document.querySelectorAll('.menu-btn')
+  const charactersDiv = document.getElementById('characters')
+  const gameOverElement = document.querySelector('.game-over')
+  const gameOverTextSpan = gameOverElement?.querySelector('span')
 
-let jumpSpeed = 15;  // Vitesse du saut
-let gravity = 2;     // Gravité
-let isJumping = false;
-
-const startBottom = 400;
-const startLeft = 100;
-
-// ====== DOM ======
-const scoreElement = document.querySelector('.score');
-const livesElement = document.querySelector('.lives');
-const gameOverElement = document.querySelector('.game-over');
-const startMessageElement = document.querySelector('.start-message');
-const gameArea = document.getElementById('gameArea');
-const platformsContainer = document.getElementById('platforms');
-const countdownDiv = document.getElementById("countdown");  // Compte à rebours
-const menuOverlay = document.getElementById("menu");  // Menu d'accueil
-const playBtn = document.getElementById("playBtn");  // Bouton Jouer
-const charactersDiv = document.getElementById("characters");  // Choix de couleur
-
-// Préchargement des sons
-const bounceSound = new Audio('assets/sounds/bounce.wav');
-const gameOverSound = new Audio('assets/sounds/game-over-sound.wav');
-
-// ====== RENDRE LES OPTIONS DE COULEUR ======
-const availableColors = ["lime", "cyan", "red", "orange", "violet"];
-
-function renderColorChoices() {
-  charactersDiv.innerHTML = "";
-  availableColors.forEach(color => {
-    const div = document.createElement("div");
-    div.className = "character-option" + (color === selectedColor ? " active" : "");
-    div.style.backgroundColor = color;
-    div.onclick = () => {
-      selectedColor = color;
-      localStorage.setItem("cj_color", selectedColor);  // Mémoriser la couleur sélectionnée
-      document.querySelectorAll(".character-option").forEach(el => el.classList.remove("active"));
-      div.classList.add("active");
-    };
-    charactersDiv.appendChild(div);
-  });
-}
-renderColorChoices();
-
-// ====== Compte à rebours ======
-function startCountdown(onFinish) {
-  let count = 3;
-  countdownDiv.style.display = "grid";  // Affichage du compte à rebours
-  countdownDiv.textContent = count;
-  countdownDiv.style.opacity = 1;  // Apparition du texte
-
-  const timer = setInterval(() => {
-    count--;
-    countdownDiv.textContent = count > 0 ? String(count) : "GO!";
-    if (count < 0) {
-      clearInterval(timer);
-      countdownDiv.style.opacity = 0;  // Disparition du texte
-      if (typeof onFinish === "function") onFinish();  // Lancer le jeu
-    }
-  }, 1000);
-}
-
-// ====== LANCEMENT DU JEU ======
-function launchGame() {
-  if (player) {
-    player.remove();
+  // Chargement audio (promesses + await)
+  const audioFiles = {
+    bounce: 'assets/sounds/bounce.wav',
+    gameover: 'assets/sounds/game-over-sound.wav',
+    music: 'assets/sounds/music.mp3'
   }
+  const audios = {}
+  const loadAudio = src => new Promise(resolve => {
+    const a = new Audio()
+    a.src = src
+    a.addEventListener('canplaythrough', () => resolve(a), { once: true })
+    a.addEventListener('error', () => resolve(a), { once: true })
+  })
+  await Promise.all(
+    Object.entries(audioFiles).map(([k, s]) =>
+      loadAudio(s).then(a => (audios[k] = a))
+    )
+  )
+  audios.music && (audios.music.loop = true)
 
-  player = createPlayer();
-  gameArea.appendChild(player);
-  resetPlayerPosition();
+  // Variables du jeu
+  let player = null
+  const playerW = 60
+  const playerH = 60
+  let playerX = 100
+  let playerY = 200
+  let vy = 0
+  const gravity = 0.6
+  const jumpVelocity = 12
+  const moveStep = 40
 
-  generatePlatforms();
-  gameOverElement.style.display = 'none';
+  let platforms = []
+  const platformW = 150
+  const platformH = 20
+  let platformGap = 100
 
-  gameStarted = true;
-  gameLoop();
-}
+  let score = 0
+  let lives = 3
+  let gameStarted = false
+  let paused = false
+  let selectedColor = localStorage.getItem('cj_color') || 'lime'
+  let bestScore = parseInt(localStorage.getItem('cj_best') || '0', 10)
 
-// ====== Création du joueur ======
-function createPlayer() {
-  const playerDiv = document.createElement("div");
-  playerDiv.classList.add("player");
-  playerDiv.style.backgroundColor = selectedColor;  // Appliquer la couleur sélectionnée
-  return playerDiv;
-}
-
-// ====== Initialisation du jeu ======
-function initGame() {
-  score = 0;
-  lives = 3;
-  platformsContainer.innerHTML = '';
-  platforms = [];
-
-  startMessageElement.style.display = 'none';
-  menuOverlay.style.display = 'none';  // Cacher le menu après le démarrage
-
-  startCountdown(launchGame);  // Démarrer le compte à rebours
-}
-
-// ====== Génération de plateformes ======
-function generatePlatforms() {
-  for (let i = 0; i < 7; i++) {
-    createPlatform(i * 100 + 50);
-  }
-}
-
-function createPlatform(bottom) {
-  const platform = document.createElement('div');
-  platform.classList.add('platform');
-  platform.style.left = `${Math.random() * (gameArea.offsetWidth - 120)}px`;
-  platform.style.bottom = `${bottom}px`;
-  platformsContainer.appendChild(platform);
-  platforms = [...platforms, platform]; // Utilisation du spread pour ajouter la plateforme
-}
-
-// ====== Reset position joueur ======
-function resetPlayerPosition() {
-  player.style.left = startLeft + 'px';
-  player.style.bottom = startBottom + 'px';
-  isJumping = false;
-}
-
-// ====== Mise à jour du joueur ======
-let lastBounceTime = 0;
-function updatePlayer() {
-  let falling = true;
-  const playerBottom = parseFloat(player.style.bottom);
-  const currentTime = Date.now();
-
-  platforms.forEach(platform => {
-    const platBottom = parseFloat(platform.style.bottom);
-    const platLeft = parseFloat(platform.style.left);
-    const platRight = platLeft + platform.offsetWidth;
-
-    // Si le joueur touche une plateforme et que 100ms sont passées depuis le dernier rebond
-    if (
-      playerBottom <= platBottom + 20 &&
-      playerBottom >= platBottom - 10 &&
-      parseFloat(player.style.left) + player.offsetWidth > platLeft &&
-      parseFloat(player.style.left) < platRight &&
-      !isJumping &&
-      currentTime - lastBounceTime > 100
-    ) {
-      handleJump();
-      bounceSound.play();  // Jouer le son de rebond
-      lastBounceTime = currentTime;
-      falling = false;
-    }
-  });
-
-  if (playerBottom <= 0) {
-    loseLife();
-    falling = false;
-  }
-
-  if (falling) {
-    fallPlayer();
-  }
-
-  // Défilement si le joueur est assez haut
-  if (playerBottom > gameArea.offsetHeight / 2) {
-    const delta = playerBottom - gameArea.offsetHeight / 2;
-    player.style.bottom = parseFloat(player.style.bottom) - delta + 'px';
-    platforms.forEach(platform => {
-      platform.style.bottom = parseFloat(platform.style.bottom) - delta + 'px';
-      if (parseFloat(platform.style.bottom) < -20) {
-        platformsContainer.removeChild(platform);
-        platforms = platforms.filter(p => p !== platform); // Mise à jour avec filter au lieu de splice
-        createPlatform(gameArea.offsetHeight + 50);
+  // Choix des couleurs (spread + mise à jour instantanée)
+  const colors = ['lime', 'cyan', 'red', 'orange', 'violet']
+  const renderColorChoices = () => {
+    charactersDiv.innerHTML = ''
+    colors.forEach(c => {
+      const d = document.createElement('div')
+      d.className = 'character-option' + (c === selectedColor ? ' active' : '')
+      d.style.backgroundColor = c
+      d.onclick = () => {
+        selectedColor = c
+        localStorage.setItem('cj_color', c)
+        document.querySelectorAll('.character-option').forEach(el =>
+          el.classList.remove('active')
+        )
+        d.classList.add('active')
+        if (player) player.style.background = c
       }
-    });
-    score += Math.floor(delta); // Score augmente avec la hauteur
+      charactersDiv.appendChild(d)
+    })
   }
-}
+  renderColorChoices()
 
-// ====== Chute du joueur ======
-function fallPlayer() {
-  player.style.bottom = parseFloat(player.style.bottom) - gravity + 'px';
-}
-
-// ====== Perte de vie ======
-function loseLife() {
-  lives--;
-  updateScoreAndLives();
-
-  if (lives <= 0) {
-    gameOver();
-  } else {
-    resetPlayerPosition();
+  const updateScoreLives = () => {
+    scoreElement.textContent = `Score: ${score}`
+    livesElement.textContent = `Vies: ${lives}`
   }
-}
 
-// ====== Score & Vies ======
-function updateScoreAndLives() {
-  scoreElement.textContent = `Score: ${score}`;
-  livesElement.textContent = `Vies: ${lives}`;
-}
+  const createPlayerElement = () => {
+    const el = document.createElement('div')
+    el.className = 'player'
+    Object.assign(el.style, {
+      width: `${playerW}px`,
+      height: `${playerH}px`,
+      position: 'absolute',
+      background: selectedColor,
+      left: `${playerX}px`,
+      bottom: `${playerY}px`
+    })
+    return el
+  }
 
-// ====== Game Over ======
-function gameOver() {
-  gameOverElement.style.display = 'block';
-  gameOverElement.querySelector('span').textContent = 'Game Over! Score: ' + score;
-  gameOverSound.play();  // Joue le son de fin de jeu
-  gameStarted = false;
-}
+  const createPlatform = y => {
+    const el = document.createElement('div')
+    el.className = 'platform'
+    const x = Math.max(
+      0,
+      Math.random() * (Math.max(320, gameArea.offsetWidth) - platformW)
+    )
+    el.style.left = `${x}px`
+    el.style.bottom = `${y}px`
+    platformsContainer.appendChild(el)
+    platforms.push({ el, x, y, scored: false })
+  }
 
-// ====== Déplacements du joueur ======
-function movePlayerLeft() {
-  const left = parseFloat(player.style.left);
-  if (left > 0) player.style.left = left - 90 + 'px';
-}
+  const generateInitialPlatforms = () => {
+    platformsContainer.innerHTML = ''
+    platforms = []
+    const base = 50
+    platformGap = Math.max(80, Math.floor(gameArea.offsetHeight / 7))
+    for (let i = 0; i < 7; i++) createPlatform(base + i * platformGap)
+  }
 
-function movePlayerRight() {
-  const left = parseFloat(player.style.left);
-  if (left < gameArea.offsetWidth - player.offsetWidth)
-    player.style.left = left + 90 + 'px';
-}
+  const resetPlayerVars = () => {
+    playerX = 100
+    playerY = Math.max(150, Math.floor(gameArea.offsetHeight * 0.2))
+    vy = 0
+  }
 
-// ====== Saut du joueur ======
-function handleJump() {
-  if (!isJumping) {
-    isJumping = true;
-    let jumpHeight = 0;
+  const spawnPlayer = () => {
+    player?.remove()
+    player = createPlayerElement()
+    gameArea.appendChild(player)
+  }
 
-    const jumpInterval = setInterval(() => {
-      if (jumpHeight < 1200) {
-        player.style.bottom = parseFloat(player.style.bottom) + jumpSpeed + 'px';
-        jumpHeight += jumpSpeed;
-      } else {
-        clearInterval(jumpInterval);
-        isJumping = false;
+  const startCountdown = onFinish => {
+    if (!countdownDiv) return onFinish?.()
+    let c = 3
+    countdownDiv.style.display = 'grid'
+    countdownDiv.textContent = c
+    countdownDiv.style.opacity = '1'
+    const t = setInterval(() => {
+      c--
+      countdownDiv.textContent = c > 0 ? `${c}` : 'GO!'
+      if (c < 0) {
+        clearInterval(t)
+        countdownDiv.style.opacity = '0'
+        setTimeout(() => (countdownDiv.style.display = 'none'), 300)
+        onFinish?.()
       }
-    }, 20);
+    }, 1000)
   }
-}
 
-// ====== Boucle de jeu ======
-function gameLoop() {
-  updatePlayer();
-  updateScoreAndLives();
-
-  if (gameStarted) requestAnimationFrame(gameLoop);
-}
-
-// ====== Gestion du clavier ======
-function keyDown(e) {
-  if (!gameStarted) initGame();  // Initialiser le jeu à la première touche
-  else {
-    if (e.key === 'ArrowLeft') movePlayerLeft();
-    if (e.key === 'ArrowRight') movePlayerRight();
+  const launchGame = () => {
+    generateInitialPlatforms()
+    resetPlayerVars()
+    spawnPlayer()
+    platforms.forEach(p => (p.scored = false))
+    score = 0
+    lives = 3
+    updateScoreLives()
+    gameStarted = true
+    paused = false
+    try {
+      audios.music?.play()
+    } catch {}
+    requestAnimationFrame(loop)
   }
-}
 
-document.addEventListener('keydown', keyDown);
+  const initGame = () => {
+    menuOverlay.style.display = 'none'
+    startCountdown(launchGame)
+  }
 
-// ====== Lancement du jeu depuis le menu ======
-playBtn.addEventListener("click", initGame); 
+  const removePlatform = idx => {
+    const p = platforms[idx]
+    p?.el?.remove()
+    platforms.splice(idx, 1)
+  }
+
+  const createPlatformAtTop = () => {
+    const maxY = Math.max(...platforms.map(p => p.y))
+    createPlatform(maxY + platformGap)
+  }
+
+  const doGameOver = () => {
+    gameStarted = false
+    paused = true
+    try {
+      audios.gameover?.play()
+      audios.music?.pause()
+    } catch {}
+    if (gameOverTextSpan)
+      gameOverTextSpan.textContent = `Game Over! Score: ${score}`
+    gameOverElement.style.display = 'block'
+    if (score > bestScore) {
+      bestScore = score
+      localStorage.setItem('cj_best', `${bestScore}`)
+    }
+  }
+
+  const handleLanding = p => {
+    vy = jumpVelocity
+    if (!p.scored) {
+      p.scored = true
+      score++
+      updateScoreLives()
+      try {
+        audios.bounce?.play()
+      } catch {}
+    }
+  }
+
+  let prevPlayerY = 0
+  const loop = () => {
+    if (!gameStarted || paused) return
+    prevPlayerY = playerY
+    vy -= gravity
+    playerY += vy
+    if (player) {
+      player.style.left = `${playerX}px`
+      player.style.bottom = `${playerY}px`
+    }
+    if (playerY <= -40) {
+      lives--
+      updateScoreLives()
+      if (lives <= 0) return doGameOver()
+      resetPlayerVars()
+      if (player) player.style.bottom = `${playerY}px`
+      return requestAnimationFrame(loop)
+    }
+    if (vy < 0) {
+      for (const p of platforms) {
+        const pLeft = p.x,
+          pRight = p.x + platformW,
+          platformTop = p.y + platformH,
+          playerLeft = playerX,
+          playerRight = playerX + playerW
+        if (
+          prevPlayerY > platformTop &&
+          playerY <= platformTop &&
+          playerRight > pLeft &&
+          playerLeft < pRight
+        ) {
+          playerY = platformTop
+          handleLanding(p)
+          break
+        }
+      }
+    }
+    const threshold = gameArea.offsetHeight * 0.6
+    if (playerY > threshold) {
+      const dy = playerY - threshold
+      playerY = threshold
+      player.style.bottom = `${playerY}px`
+      platforms.forEach(p => {
+        p.y -= dy
+        p.el.style.bottom = `${p.y}px`
+      })
+      platforms = [...platforms.filter(p => p.y > -platformH - 50)]
+      while (platforms.length < 7) createPlatformAtTop()
+    }
+    requestAnimationFrame(loop)
+  }
+
+  // Contrôles clavier
+  document.addEventListener('keydown', e => {
+    if (!gameStarted || paused) return
+    if (e.code === 'ArrowLeft')
+      playerX = Math.max(0, playerX - moveStep)
+    if (e.code === 'ArrowRight')
+      playerX = Math.min(gameArea.offsetWidth - playerW, playerX + moveStep)
+    if (e.code === 'Space') vy = jumpVelocity
+  })
+
+  // 🖱️ Boutons
+  playBtn?.addEventListener('click', initGame)
+  retryBtn?.addEventListener('click', () => {
+    gameOverElement.style.display = 'none'
+    initGame()
+  })
+  retryBtnPause?.addEventListener('click', () => {
+    pauseMenu.style.display = 'none'
+    initGame()
+  })
+  pauseBtn?.addEventListener('click', () => {
+    if (!gameStarted) return
+    paused = true
+    pauseMenu.style.display = 'flex'
+    try {
+      audios.music?.pause()
+    } catch {}
+  })
+  resumeBtn?.addEventListener('click', () => {
+    pauseMenu.style.display = 'none'
+    startCountdown(() => {
+      paused = false
+      try {
+        audios.music?.play()
+      } catch {}
+      requestAnimationFrame(loop)
+    })
+  })
+  menuBtns.forEach(b =>
+    b.addEventListener('click', () => {
+      pauseMenu.style.display = 'none'
+      gameOverElement.style.display = 'none'
+      menuOverlay.style.display = 'grid'
+      gameStarted = false
+      paused = false
+      try {
+        audios.music?.pause()
+      } catch {}
+    })
+  )
+
+  updateScoreLives()
+})
