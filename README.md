@@ -22,6 +22,23 @@ Ce projet respecte les contraintes suivantes :
 
 Le jeu *Crazy Jumper* est conçu pour illustrer l’ensemble de ces notions à travers une expérience interactive, fluide et originale.
 
+## Structure du projet
+
+Crazy-Jumper/
+│
+├── assets/               # Ressources du jeu
+│   └── sounds/           # Dossier des sons
+│       ├── bounce.wav
+│       └── game-over-sound.wav
+│
+├── src/                  # Code source du projet
+│   ├── app.js            # Logique principale du jeu
+│   └── style.css         # Feuille de style (design et mise en page)
+│
+├── .hintrc               # Fichier de configuration pour validation du code
+├── index.html            # Page principale qui lance le jeu
+└── README.md             # Documentation du projet
+
 ## Prérequis
 
 Avant de pouvoir exécuter ce jeu, assurez-vous d'avoir installé un navigateur web moderne (Chrome, Firefox, Edge). 
